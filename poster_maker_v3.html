@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anime Poster Maker Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  min-height: 100vh;
+  background: #080812;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 14px 10px; font-family: 'Segoe UI', sans-serif; color: #fff;
+}
+h1 {
+  font-family: 'Bangers', Impact; font-size: 1.8rem; letter-spacing: 4px;
+  background: linear-gradient(90deg, #f72585, #7209b7, #4cc9f0);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: 2px; text-align: center;
+}
+.sub { opacity: 0.4; font-size: 0.73rem; margin-bottom: 12px; text-align: center; }
+
+/* ── Platform Tabs ── */
+.platform-tabs {
+  display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;
+  margin-bottom: 6px; width: 100%; max-width: 700px;
+}
+.ptab {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.7); border-radius: 8px;
+  padding: 5px 11px; font-size: 0.72rem; cursor: pointer;
+  transition: all 0.15s; white-space: nowrap;
+}
+.ptab.active { background: linear-gradient(135deg,#7209b7,#f72585); border-color:transparent; color:#fff; }
+.ptab:hover:not(.active) { background: rgba(255,255,255,0.12); }
+
+/* ── Resolution Row ── */
+.res-row {
+  display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;
+  margin-bottom: 10px; width: 100%; max-width: 700px;
+}
+.res-btn {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.65); border-radius: 20px;
+  padding: 4px 11px; font-size: 0.68rem; cursor: pointer;
+  transition: all 0.15s; white-space: nowrap;
+}
+.res-btn.active { background: rgba(247,37,133,0.3); border-color: #f72585; color:#fff; }
+.res-btn:hover:not(.active) { background: rgba(255,255,255,0.1); }
+
+/* ── Main Layout ── */
+.main-wrap { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 1000px; }
+
+/* ── Canvas ── */
+.canvas-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+#posterCanvas {
+  border-radius: 10px;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 8px 40px rgba(114,9,183,0.4);
+  cursor: grab; display: block;
+}
+#posterCanvas:active { cursor: grabbing; }
+.res-info { font-size: 0.65rem; opacity: 0.35; }
+
+.dl-btn {
+  background: linear-gradient(90deg,#f72585,#7209b7);
+  color:#fff; border:none; border-radius:50px;
+  padding: 10px 28px; font-size: 0.9rem; font-weight: bold;
+  cursor: pointer; letter-spacing: 1px;
+  box-shadow: 0 4px 20px rgba(247,37,133,0.35);
+  transition: transform 0.1s;
+}
+.dl-btn:hover { transform: scale(1.04); }
+
+/* ── Controls ── */
+.controls {
+  background: rgba(255,255,255,0.04);
+  border-radius: 12px; padding: 14px;
+  display: flex; flex-direction: column; gap: 13px;
+  width: 278px;
+  border: 1px solid rgba(255,255,255,0.07);
+  max-height: 80vh; overflow-y: auto;
+}
+.controls::-webkit-scrollbar { width: 3px; }
+.controls::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius:4px; }
+
+.stitle { font-size: 0.65rem; font-weight: bold; letter-spacing: 1.5px; opacity: 0.5; display: block; margin-bottom: 5px; }
+
+.upload-btn {
+  width: 100%;
+  background: linear-gradient(135deg,rgba(114,9,183,0.25),rgba(247,37,133,0.25));
+  border: 1.5px dashed rgba(247,37,133,0.45); border-radius: 9px; padding: 12px;
+  text-align: center; cursor: pointer; color: #fff; font-size: 0.82rem; font-weight: bold;
+  position: relative; overflow: hidden;
+}
+.upload-btn input[type=file] { position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer; }
+#previewThumb { max-width:50px;max-height:50px;border-radius:6px;margin-top:5px;display:none; }
+#status { font-size:0.68rem;padding:4px 8px;border-radius:7px;text-align:center;margin-top:4px;display:none; }
+#status.ok { background:rgba(0,200,100,0.12);color:#4ade80;display:block; }
+.move-hint { background:rgba(76,201,240,0.08);border:1px solid rgba(76,201,240,0.25);border-radius:7px;padding:6px 9px;font-size:0.67rem;color:#4cc9f0;text-align:center;display:none;margin-top:4px; }
+.move-hint.show { display:block; }
+
+.row { display:flex;align-items:center;gap:7px;margin-bottom:3px; }
+.rlabel { font-size:0.68rem;opacity:0.55;width:75px;flex-shrink:0; }
+input[type=text] {
+  flex:1;background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:7px;padding:5px 8px;
+  color:#fff;font-size:0.82rem;outline:none;
+}
+input[type=text]:focus { border-color:rgba(247,37,133,0.5); }
+input[type=range] { width:100%;accent-color:#f72585; }
+.srow { display:flex;align-items:center;gap:7px; }
+.sval { font-size:0.67rem;opacity:0.45;width:32px;text-align:right;flex-shrink:0; }
+
+.presets-grid { display:grid;grid-template-columns:repeat(6,1fr);gap:5px; }
+.pdot {
+  width:100%;aspect-ratio:1;border-radius:50%;border:2px solid transparent;
+  cursor:pointer;transition:transform 0.1s,border 0.1s;
+}
+.pdot:hover { transform:scale(1.18); }
+.pdot.active { border:2px solid #fff;box-shadow:0 0 8px rgba(255,255,255,0.5); }
+
+.color-grid { display:grid;grid-template-columns:1fr 1fr;gap:6px; }
+.ci { display:flex;flex-direction:column;gap:2px; }
+.ci label { font-size:0.62rem;opacity:0.45; }
+.ci input[type=color] { width:100%;height:26px;border:none;border-radius:5px;cursor:pointer; }
+
+/* ── Save Overlay ── */
+#saveOverlay {
+  display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.93);z-index:999;
+  flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:18px;
+}
+#saveOverlay .hint { color:#4ade80;font-size:0.9rem;font-weight:bold;text-align:center; }
+#saveOverlay img { max-width:90%;max-height:62vh;border-radius:10px;box-shadow:0 0 30px rgba(247,37,133,0.4); }
+#saveOverlay button { background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:50px;padding:9px 26px;font-size:0.88rem;cursor:pointer; }
+</style>
+</head>
+<body>
+
+<h1>🎨 ANIME POSTER MAKER PRO</h1>
+<p class="sub">Platform choose karo • Resolution set karo • Drag karke image move karo</p>
+
+<!-- Platform Tabs -->
+<div class="platform-tabs">
+  <button class="ptab active" onclick="selectPlatform('youtube')">▶️ YouTube</button>
+  <button class="ptab" onclick="selectPlatform('instagram')">📸 Instagram Feed</button>
+  <button class="ptab" onclick="selectPlatform('reels')">🎬 Reels / Stories / TikTok</button>
+  <button class="ptab" onclick="selectPlatform('classic')">🖥️ Classic</button>
+</div>
+
+<!-- Resolution Row -->
+<div class="res-row" id="resRow"></div>
+
+<div class="main-wrap">
+
+  <!-- Canvas -->
+  <div class="canvas-wrap">
+    <canvas id="posterCanvas"></canvas>
+    <div class="res-info" id="resInfo">YouTube Full Screen — 1920×1080</div>
+    <button class="dl-btn" onclick="downloadPoster()">⬇️ Save Poster</button>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+
+    <div>
+      <span class="stitle">👤 CHARACTER</span>
+      <div class="upload-btn">
+        📁 Image choose karo
+        <input type="file" id="charFile" accept="image/*" onchange="loadChar(this)">
+      </div>
+      <img id="previewThumb" alt="">
+      <div id="status"></div>
+      <div class="move-hint" id="moveHint">✋ Canvas pe drag karke move karo</div>
+    </div>
+
+    <div id="imgCtrl" style="display:none">
+      <span class="stitle">📐 IMAGE SIZE</span>
+      <div class="srow">
+        <input type="range" min="10" max="160" value="70" id="imgSize" oninput="imgSzVal.innerText=this.value+'%';draw()">
+        <span class="sval" id="imgSzVal">70%</span>
+      </div>
+    </div>
+
+    <div>
+      <span class="stitle">✏️ TEXT</span>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <div class="row"><span class="rlabel">Hashtag</span><input type="text" id="t_hash" value="#1" oninput="draw()"></div>
+        <div class="row"><span class="rlabel">Line 1</span><input type="text" id="t_line1" value="Apna Naam" oninput="draw()"></div>
+        <div class="row"><span class="rlabel">Line 2</span><input type="text" id="t_line2" value="&" oninput="draw()"></div>
+        <div class="row"><span class="rlabel">Line 3</span><input type="text" id="t_line3" value="Apna Style" oninput="draw()"></div>
+      </div>
+    </div>
+
+    <div>
+      <span class="stitle">🔠 TEXT SIZE: <span id="szLbl">88</span>px</span>
+      <input type="range" min="20" max="240" value="88" id="fontSize" oninput="szLbl.innerText=this.value;draw()">
+    </div>
+
+    <div>
+      <span class="stitle">🎨 COLOR PRESETS (18)</span>
+      <div class="presets-grid" id="presetsGrid"></div>
+    </div>
+
+    <div>
+      <span class="stitle">🖌️ CUSTOM COLORS</span>
+      <div class="color-grid">
+        <div class="ci"><label>BG Color 1</label><input type="color" id="c_bg1" value="#0d0221" oninput="draw()"></div>
+        <div class="ci"><label>BG Color 2</label><input type="color" id="c_bg2" value="#7209b7" oninput="draw()"></div>
+        <div class="ci"><label>Text Color</label><input type="color" id="c_text" value="#ffffff" oninput="draw()"></div>
+        <div class="ci"><label>Outline</label><input type="color" id="c_stroke" value="#000000" oninput="draw()"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Save Overlay -->
+<div id="saveOverlay">
+  <div class="hint">📱 Image ko <b>press & hold</b> → "Save Image"</div>
+  <img id="saveImg" alt="">
+  <button onclick="document.getElementById('saveOverlay').style.display='none'">✕ Band Karo</button>
+</div>
+
+<script>
+// ─── PLATFORMS & RESOLUTIONS ──────────────────────────────
+const PLATFORMS = {
+  youtube: {
+    label: "▶️ YouTube",
+    sizes: [
+      { name:"Full Screen 1080p", w:1920, h:1080 },
+      { name:"Thumbnail 720p",    w:1280, h:720  },
+      { name:"4K UHD",            w:3840, h:2160 },
+      { name:"SD 480p",           w:854,  h:480  },
+    ]
+  },
+  instagram: {
+    label: "📸 Instagram Feed",
+    sizes: [
+      { name:"Portrait 4:5",   w:1080, h:1350 },
+      { name:"Square 1:1",     w:1080, h:1080 },
+      { name:"Landscape 1.91:1", w:1080, h:566 },
+    ]
+  },
+  reels: {
+    label: "🎬 Reels / Stories / TikTok",
+    sizes: [
+      { name:"9:16 Full HD",  w:1080, h:1920 },
+      { name:"9:16 HD",       w:720,  h:1280 },
+      { name:"9:16 SD",       w:480,  h:854  },
+    ]
+  },
+  classic: {
+    label: "🖥️ Classic",
+    sizes: [
+      { name:"4:3 HD",      w:1024, h:768  },
+      { name:"4:3 FHD",     w:1440, h:1080 },
+      { name:"16:9 720p",   w:1280, h:720  },
+      { name:"16:9 1080p",  w:1920, h:1080 },
+      { name:"Square 1:1",  w:1080, h:1080 },
+    ]
+  }
+};
+
+let curPlatform = "youtube";
+let canvasW = 1920, canvasH = 1080;
+let curResName = "Full Screen 1080p";
+let charImg = null;
+let imgX = 0, imgY = 0;
+let isDragging = false, dragSX = 0, dragSY = 0, imgSX = 0, imgSY = 0;
+
+// ─── PRESETS ──────────────────────────────────────────────
+const PRESETS = [
+  { bg1:"#0d0221", bg2:"#7209b7", text:"#f72585", stroke:"#000000" },
+  { bg1:"#03071e", bg2:"#e85d04", text:"#ffba08", stroke:"#000000" },
+  { bg1:"#0a1628", bg2:"#1a73e8", text:"#ffffff", stroke:"#003366" },
+  { bg1:"#0d2818", bg2:"#2d6a4f", text:"#95d5b2", stroke:"#000000" },
+  { bg1:"#2d0000", bg2:"#d62828", text:"#f1faee", stroke:"#000000" },
+  { bg1:"#1a1a2e", bg2:"#16213e", text:"#e94560", stroke:"#000000" },
+  { bg1:"#f72585", bg2:"#7209b7", text:"#ffffff", stroke:"#000000" },
+  { bg1:"#4cc9f0", bg2:"#4361ee", text:"#ffffff", stroke:"#003399" },
+  { bg1:"#fb5607", bg2:"#ff006e", text:"#ffbe0b", stroke:"#000000" },
+  { bg1:"#06d6a0", bg2:"#118ab2", text:"#ffffff", stroke:"#004d40" },
+  { bg1:"#ffbe0b", bg2:"#fb5607", text:"#000000", stroke:"#7a3300" },
+  { bg1:"#3a0ca3", bg2:"#560bad", text:"#f72585", stroke:"#000000" },
+  { bg1:"#000000", bg2:"#1a1a1a", text:"#ffd700", stroke:"#8b6914" },
+  { bg1:"#0a0a0a", bg2:"#1e3a5f", text:"#00bfff", stroke:"#00003d" },
+  { bg1:"#1a0a2e", bg2:"#2d1b4e", text:"#c77dff", stroke:"#000000" },
+  { bg1:"#0f2027", bg2:"#203a43", text:"#00ffa3", stroke:"#000000" },
+  { bg1:"#1a1a2e", bg2:"#e94560", text:"#ffffff", stroke:"#000000" },
+  { bg1:"#0d0d0d", bg2:"#333333", text:"#ff4d4d", stroke:"#000000" },
+];
+
+const pg = document.getElementById("presetsGrid");
+PRESETS.forEach((p,i) => {
+  const d = document.createElement("div");
+  d.className = "pdot"+(i===0?" active":"");
+  d.style.background = `linear-gradient(135deg,${p.bg1},${p.bg2})`;
+  d.onclick = () => applyPreset(i);
+  pg.appendChild(d);
+});
+
+function applyPreset(i) {
+  const p = PRESETS[i];
+  document.querySelectorAll(".pdot").forEach((d,j)=>d.classList.toggle("active",j===i));
+  document.getElementById("c_bg1").value = p.bg1;
+  document.getElementById("c_bg2").value = p.bg2;
+  document.getElementById("c_text").value = p.text;
+  document.getElementById("c_stroke").value = p.stroke;
+  draw();
+}
+
+function g(id){ return document.getElementById(id).value; }
+
+// ─── PLATFORM SELECTION ───────────────────────────────────
+function selectPlatform(key) {
+  curPlatform = key;
+  document.querySelectorAll(".ptab").forEach(t => {
+    t.classList.toggle("active", t.textContent.includes(PLATFORMS[key].label.split(' ')[1]) || t.getAttribute("onclick").includes(key));
+  });
+  buildResRow(key);
+  // Auto-select first size
+  const first = PLATFORMS[key].sizes[0];
+  setRes(first.w, first.h, first.name);
+}
+
+function buildResRow(key) {
+  const row = document.getElementById("resRow");
+  row.innerHTML = "";
+  PLATFORMS[key].sizes.forEach((s, i) => {
+    const b = document.createElement("button");
+    b.className = "res-btn" + (i===0?" active":"");
+    b.textContent = `${s.name} (${s.w}×${s.h})`;
+    b.onclick = () => {
+      document.querySelectorAll(".res-btn").forEach(x=>x.classList.remove("active"));
+      b.classList.add("active");
+      setRes(s.w, s.h, s.name);
+    };
+    row.appendChild(b);
+  });
+}
+
+function setRes(w, h, name) {
+  canvasW = w; canvasH = h; curResName = name;
+  const canvas = document.getElementById("posterCanvas");
+  canvas.width = w; canvas.height = h;
+  // Reset img center
+  imgX = w * 0.72; imgY = h * 0.5;
+  document.getElementById("resInfo").innerText = `${curPlatform.charAt(0).toUpperCase()+curPlatform.slice(1)} — ${name} — ${w}×${h}`;
+  fitCanvas();
+  draw();
+}
+
+function fitCanvas() {
+  const canvas = document.getElementById("posterCanvas");
+  const maxW = Math.min(window.innerWidth - 320, 520);
+  const maxH = window.innerHeight * 0.65;
+  const scaleW = maxW / canvasW;
+  const scaleH = maxH / canvasH;
+  const scale = Math.min(scaleW, scaleH);
+  canvas.style.width  = (canvasW * scale) + "px";
+  canvas.style.height = (canvasH * scale) + "px";
+}
+
+// ─── DRAG ─────────────────────────────────────────────────
+const canvas = document.getElementById("posterCanvas");
+
+function getPos(e) {
+  const r = canvas.getBoundingClientRect();
+  const cx = e.touches ? e.touches[0].clientX : e.clientX;
+  const cy = e.touches ? e.touches[0].clientY : e.clientY;
+  return { x:(cx-r.left)*(canvasW/r.width), y:(cy-r.top)*(canvasH/r.height) };
+}
+canvas.addEventListener("mousedown", e=>{if(!charImg)return;isDragging=true;const p=getPos(e);dragSX=p.x;dragSY=p.y;imgSX=imgX;imgSY=imgY;});
+canvas.addEventListener("touchstart",e=>{if(!charImg)return;isDragging=true;const p=getPos(e);dragSX=p.x;dragSY=p.y;imgSX=imgX;imgSY=imgY;},{passive:true});
+canvas.addEventListener("mousemove",e=>{if(!isDragging)return;const p=getPos(e);imgX=imgSX+(p.x-dragSX);imgY=imgSY+(p.y-dragSY);draw();});
+canvas.addEventListener("touchmove",e=>{if(!isDragging)return;if(e.cancelable)e.preventDefault();const p=getPos(e);imgX=imgSX+(p.x-dragSX);imgY=imgSY+(p.y-dragSY);draw();},{passive:false});
+canvas.addEventListener("mouseup",()=>isDragging=false);
+canvas.addEventListener("touchend",()=>isDragging=false);
+canvas.addEventListener("mouseleave",()=>isDragging=false);
+
+// ─── UPLOAD ───────────────────────────────────────────────
+function loadChar(input) {
+  const file = input.files[0];
+  if(!file) return;
+  const thumb = document.getElementById("previewThumb");
+  const status = document.getElementById("status");
+  const reader = new FileReader();
+  reader.onload = e => {
+    const url = e.target.result;
+    thumb.src = url; thumb.style.display = "inline-block";
+    const img = new Image();
+    img.onload = () => {
+      charImg = img;
+      imgX = canvasW * 0.72; imgY = canvasH * 0.5;
+      status.className = "ok";
+      status.innerText = "✅ Character add ho gaya! Drag karo.";
+      document.getElementById("moveHint").classList.add("show");
+      document.getElementById("imgCtrl").style.display = "block";
+      draw();
+    };
+    img.src = url;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ─── DRAW ─────────────────────────────────────────────────
+function draw() {
+  const canvas = document.getElementById("posterCanvas");
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height;
+  const bg1=g("c_bg1"), bg2=g("c_bg2"), tc=g("c_text"), sc=g("c_stroke");
+  const fs = parseInt(g("fontSize"));
+  const imgSc = parseInt(document.getElementById("imgSize").value) / 100;
+
+  // BG
+  const gr = ctx.createRadialGradient(W*0.35,H*0.35,0,W*0.5,H*0.5,W*0.85);
+  gr.addColorStop(0,bg1); gr.addColorStop(1,bg2);
+  ctx.fillStyle=gr; ctx.fillRect(0,0,W,H);
+
+  // Glow
+  const gw = ctx.createRadialGradient(W*0.35,H*0.32,0,W*0.35,H*0.32,W*0.42);
+  gw.addColorStop(0,"rgba(255,255,255,0.13)"); gw.addColorStop(1,"rgba(255,255,255,0)");
+  ctx.fillStyle=gw; ctx.fillRect(0,0,W,H);
+
+  // Deco lines
+  ctx.save(); ctx.globalAlpha=0.05;
+  for(let i=0;i<10;i++){
+    ctx.beginPath(); ctx.moveTo(0,H*(0.05+i*0.1)); ctx.lineTo(W,H*(0.02+i*0.105));
+    ctx.strokeStyle="#fff"; ctx.lineWidth=H*0.018; ctx.stroke();
+  }
+  ctx.restore();
+
+  // Text
+  function sText(t,x,y,size){
+    if(!t) return;
+    ctx.save();
+    ctx.font=`900 ${size}px Bangers,Impact,sans-serif`;
+    ctx.textAlign="left";
+    ctx.lineWidth=size*0.12; ctx.strokeStyle=sc; ctx.lineJoin="round";
+    ctx.strokeText(t,x,y);
+    ctx.fillStyle=tc; ctx.fillText(t,x,y);
+    const sh=ctx.createLinearGradient(x,y-size,x,y);
+    sh.addColorStop(0,"rgba(255,255,255,0.42)");
+    sh.addColorStop(0.3,"rgba(255,255,255,0)");
+    ctx.fillStyle=sh; ctx.fillText(t,x,y);
+    ctx.restore();
+  }
+
+  const tx = W*0.04;
+  // Adapt text position for portrait vs landscape
+  const isPortrait = H > W;
+  if(isPortrait){
+    sText(g("t_line1"), tx, H*0.22, fs);
+    sText(g("t_line2"), tx+W*0.06, H*0.31, fs*0.85);
+    sText(g("t_line3"), tx, H*0.40, fs);
+  } else {
+    sText(g("t_line1"), tx, H*0.38, fs);
+    sText(g("t_line2"), tx+W*0.05, H*0.52, fs*0.85);
+    sText(g("t_line3"), tx, H*0.66, fs);
+  }
+
+  // Hashtag
+  const hash=g("t_hash");
+  if(hash){
+    ctx.textAlign="left";
+    ctx.font=`bold ${fs*0.6}px Bangers,Impact,sans-serif`;
+    ctx.fillStyle="rgba(0,0,0,0.35)"; ctx.fillText(hash,W*0.04+2,H*0.10+2);
+    ctx.fillStyle=tc; ctx.fillText(hash,W*0.04,H*0.10);
+  }
+
+  // Image (on top)
+  if(charImg){
+    const asp=charImg.naturalWidth/charImg.naturalHeight;
+    const iH=H*imgSc;
+    const iW=iH*asp;
+    ctx.drawImage(charImg,imgX-iW/2,imgY-iH/2,iW,iH);
+  } else {
+    ctx.save(); ctx.globalAlpha=0.1; ctx.fillStyle="#fff";
+    ctx.beginPath(); ctx.arc(W*0.73,H*0.42,H*0.17,0,Math.PI*2); ctx.fill();
+    ctx.fillRect(W*0.62,H*0.55,W*0.22,H*0.27);
+    ctx.globalAlpha=1; ctx.font=`${H*0.03}px sans-serif`;
+    ctx.fillStyle="rgba(255,255,255,0.35)"; ctx.textAlign="center";
+    ctx.fillText("Character upload karo",W*0.73,H*0.87);
+    ctx.restore();
+  }
+
+  // Bottom fade
+  const bf=ctx.createLinearGradient(0,H*0.87,0,H);
+  bf.addColorStop(0,"rgba(0,0,0,0)"); bf.addColorStop(1,"rgba(0,0,0,0.45)");
+  ctx.fillStyle=bf; ctx.fillRect(0,H*0.87,W,H*0.13);
+}
+
+// ─── DOWNLOAD ─────────────────────────────────────────────
+function downloadPoster(){
+  const canvas=document.getElementById("posterCanvas");
+  const url=canvas.toDataURL("image/png");
+  try{
+    const a=document.createElement("a");
+    a.download=`poster_${curPlatform}_${canvasW}x${canvasH}.png`;
+    a.href=url; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  }catch(e){}
+  document.getElementById("saveImg").src=url;
+  document.getElementById("saveOverlay").style.display="flex";
+}
+
+// ─── INIT ──────────────────────────────────────────────────
+window.onload = function(){
+  buildResRow("youtube");
+  setRes(1920,1080,"Full Screen 1080p");
+  applyPreset(0);
+  window.addEventListener("resize",()=>{fitCanvas();});
+};
+</script>
+</body>
+</html>
